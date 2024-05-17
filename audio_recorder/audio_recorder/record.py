@@ -29,6 +29,7 @@ import numpy as np
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from std_msgs.msg import Int16MultiArray, MultiArrayDimension
 
 # Audio recorder node 
@@ -39,7 +40,7 @@ class AudioRecorder(Node):
         # Declare parameters
         self.declare_parameters("", [
             ("format", pyaudio.paInt16),
-            ("channels", 1),
+            ("channels", 2),
             ("rate", 16000),
             ("chunk", 4096),
             ("device", -1),
@@ -73,7 +74,9 @@ class AudioRecorder(Node):
         
         # Setup ROS publisher
         self.audio_publisher = self.create_publisher(
-            Int16MultiArray, "audio", 5
+            Int16MultiArray,
+            "audio",
+            qos_profile_sensor_data
         )
         self.record_timer = self.create_timer(
             float(self.chunk) / float(self.rate),
@@ -88,7 +91,9 @@ class AudioRecorder(Node):
         audio_msg.data = audio.tolist()
         audio_msg.layout.data_offset = 0
         audio_msg.layout.dim.append(
-            MultiArrayDimension(label = "audio", size = self.chunk, stride = 1)
+            MultiArrayDimension(label = "audio",
+                                size = self.chunk,
+                                stride = 1)
         )
         self.audio_publisher.publish(audio_msg)
                                                             

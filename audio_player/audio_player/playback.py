@@ -29,6 +29,7 @@ import numpy as np
 
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from std_msgs.msg import Int16MultiArray, MultiArrayDimension
 
 # Audio playback node
@@ -69,13 +70,17 @@ class AudioPlayback(Node):
         
         # Setup ROS subscriber
         self.audio_subscriber = self.create_subscription(
-            Int16MultiArray, "audio", self.audio_callback, 5
+            Int16MultiArray,
+            "audio",
+            self.audio_callback,
+            qos_profile_sensor_data
         )
 
     # Timed audio record callback method
     def audio_callback(self, msg) -> None:
-        data = np.frombuffer(data, np.int16)
-        data = data-tobytes()
+        data = np.frombuffer(msg.data, np.int16)
+        #data = np.repeat(data, 2)
+        data = data.tobytes()
         self.stream.write(data)
                                                             
     # Cleanup method
