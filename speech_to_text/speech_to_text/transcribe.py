@@ -22,53 +22,55 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-import pyaudio
-
-import atexit
-import numpy as np
-
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
 from std_msgs.msg import Int16MultiArray, MultiArrayDimension
+from std_msgs.msg import String
 
-# Audio playback node
-class AudioPlayback(Node):
+import pyaudio
+from vosk import Model, KaldiRecognizer
+from whisper import load_model
+
+import numpy as np
+
+# Speech transcribe node
+class SpeechTranscribe(Node):
     def __init__(self) -> None:
-        super().__init__("audio_recorder_node")
+        super().__init__("speech_transcribe__node")
 
         # Declare parameters
         self.declare_parameters("", [
-            ("format", pyaudio.paInt16),
-            ("channels", 2),
+            ("model", "vosk"),
+            ("lang", "en-us"),
+            ("size", "base"),
             ("rate", 16000),
-            ("device", -1),
         ])
-        self.format = self.get_parameter(
-            "format").get_parameter_value().integer_value
-        self.channels = self.get_parameter(
-            "channels").get_parameter_value().integer_value
-        self.rate = self.get_parameter(
+        self.model = self.get_parameter(
+            "model").get_parameter_value().string_value
+        lang = self.get_parameter(
+            "lang").get_parameter_value().string_value
+        model_size = self.get_parameter(
+            "size").get_parameter_value().string_value
+        rate = self.get_parameter(
             "rate").get_parameter_value().integer_value
-        device = self.get_parameter(
-            "device").get_parameter_value().integer_value
-        if device < 0:
-            device = None  
 
-        # Open audio stream 
-        self.audio = pyaudio.PyAudio()
-        self.stream = self.audio.open(
-            input_device_index = device,
-            channels = self.channels,
-            format = self.format,
-            output = True,
-            rate = self.rate
+        # Load text-to-speech model
+        self.get_logger().info(f"Loding model '{self.model}.{model_size}'")
+        if self.model == 'vosk':
+            model = Model(lang = lang)
+            self.rec = KaldiRecognizer(model, rate)
+        elif self.model == 'whisper':
+            self.rec = load_model(model_size, device = "cuda")
+        else: 
+            self.get_logger().warning(f"Model '{self.model}' not supported.")
+            
+        # Setup ROS publiser and subscriber
+        self.text_publiser = self.create_publisher(
+            String,
+            "text",
+            qos_profile_sensor_data
         )
-
-        # Register cleanup callback method
-        atexit.register(self.cleanup)
-        
-        # Setup ROS subscriber
         self.audio_subscriber = self.create_subscription(
             Int16MultiArray,
             "audio",
@@ -79,19 +81,22 @@ class AudioPlayback(Node):
     # Timed audio record callback method
     def audio_callback(self, msg) -> None:
         data = np.frombuffer(msg.data, np.int16)
-        #data = np.repeat(data, 2)
-        data = data.tobytes()
-        self.stream.write(data)
-                                                            
-    # Cleanup method
-    def cleanup(self) -> None:
-        self.stream.close()
-        self.audio.terminate()
-        
+        if self.model == 'vosk':
+            data = data.tobytes()
+            if self.rec.AcceptWaveform(data):
+                text_msg = String()
+                text_msg.data = self.rec.Result()
+                self.text_publiser.publish(text_msg)
+        elif self.model == 'whisper':
+            data = data.astype(np.float32)
+            text_msg = String()
+            text_msg.data = self.rec.transcribe(data)['text']
+            self.text_publiser.publish(text_msg)
+
 # Main function
 def main(args = None):
     rclpy.init(args = args)
-    node = AudioPlayback()
+    node = SpeechTranscribe()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
