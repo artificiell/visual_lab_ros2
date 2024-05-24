@@ -31,8 +31,11 @@ from std_msgs.msg import String
 import pyaudio
 from vosk import Model, KaldiRecognizer
 from whisper import load_model
+import torch
 
+import threading
 import numpy as np
+import json
 
 # Speech transcribe node
 class SpeechTranscribe(Node):
@@ -57,18 +60,21 @@ class SpeechTranscribe(Node):
 
         # Load text-to-speech model
         self.get_logger().info(f"Loding model '{self.model}.{model_size}'")
-        if self.model == 'vosk':
-            model = Model(lang = lang)
-            self.rec = KaldiRecognizer(model, rate)
-        elif self.model == 'whisper':
-            self.rec = load_model(model_size, device = "cuda")
-        else: 
-            self.get_logger().warning(f"Model '{self.model}' not supported.")
+        model = Model(lang = lang)
+        self.recognizer = KaldiRecognizer(model, rate)
+        if self.model == 'whisper':
+            self.transcriber = load_model(model_size)
+            self.frames = []
             
         # Setup ROS publiser and subscriber
-        self.text_publiser = self.create_publisher(
+        self.text_sentence_publiser = self.create_publisher(
             String,
-            "text",
+            "text/sentence",
+            qos_profile_sensor_data
+        )
+        self.text_partial_publiser = self.create_publisher(
+            String,
+            "text/partial",
             qos_profile_sensor_data
         )
         self.audio_subscriber = self.create_subscription(
@@ -78,21 +84,36 @@ class SpeechTranscribe(Node):
             qos_profile_sensor_data
         )
 
-    # Timed audio record callback method
+    # Audio transcribing callback method
     def audio_callback(self, msg) -> None:
         data = np.frombuffer(msg.data, np.int16)
-        if self.model == 'vosk':
-            data = data.tobytes()
-            if self.rec.AcceptWaveform(data):
-                text_msg = String()
-                text_msg.data = self.rec.Result()
-                self.text_publiser.publish(text_msg)
-        elif self.model == 'whisper':
-            data = data.astype(np.float32)
-            text_msg = String()
-            text_msg.data = self.rec.transcribe(data)['text']
-            self.text_publiser.publish(text_msg)
+        data = np.mean(data.reshape(-1, 2), axis=1).astype(np.int16)
+        if self.model == 'whisper':
+            self.frames.append(data.copy())
+        data = data.tobytes()
+        if self.recognizer.AcceptWaveform(data):
+            result = json.loads(self.recognizer.Result())
+            if self.model == 'whisper':
+                data = b''.join(self.frames)
 
+                # Convert float 32  and clamp audio stream t PCM compatible wavelength (max 32768Hz) 
+                data = np.frombuffer(data, dtype=np.int16).astype(np.float32) / 32768.0
+
+                # Transcribe the frame buffer
+                result = self.transcriber.transcribe(data, task = "transcribe", fp16 = True)
+                #self.get_logger().info(f"Result: '{result}'")
+                self.frames.clear()
+                
+            text_msg = String()
+            text_msg.data = result['text']
+            self.text_sentence_publiser.publish(text_msg)
+        else:
+            text_msg = String()
+            result = json.loads(self.recognizer.PartialResult())
+            text_msg.data = result['partial']
+            self.text_partial_publiser.publish(text_msg)
+                
+                
 # Main function
 def main(args = None):
     rclpy.init(args = args)
