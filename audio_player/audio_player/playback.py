@@ -35,7 +35,7 @@ from std_msgs.msg import Int16MultiArray, MultiArrayDimension
 # Audio playback node
 class AudioPlayback(Node):
     def __init__(self) -> None:
-        super().__init__("audio_recorder_node")
+        super().__init__("audio_playback_node")
 
         # Declare parameters
         self.declare_parameters("", [
