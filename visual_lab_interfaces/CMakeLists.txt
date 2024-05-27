@@ -16,7 +16,7 @@ set(msg_files
 )
 set(srv_files
   "srv/SetScreenBackground.srv"
-  "srv/UpdateScreenImage.srv"
+  "srv/SetScreenImage.srv"
 )
 
 # Generate interfaces

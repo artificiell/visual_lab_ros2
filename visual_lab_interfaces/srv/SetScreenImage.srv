@@ -3,4 +3,4 @@ sensor_msgs/Image image
 int16 x
 int16 y
 ---
-bool status
+bool success

@@ -76,7 +76,7 @@ class AudioPlayback(Node):
             qos_profile_sensor_data
         )
 
-    # Timed audio record callback method
+    # Audio playback callback method
     def audio_callback(self, msg) -> None:
         data = np.frombuffer(msg.data, np.int16)
         #data = np.repeat(data, 2)
