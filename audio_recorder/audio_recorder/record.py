@@ -2,7 +2,7 @@
 
 # MIT License
 
-# Copyright (c) 2023  Miguel Ángel González Santamarta
+# Copyright (c) 2024 Andreas Persson
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -75,7 +75,7 @@ class AudioRecorder(Node):
         # Setup ROS publisher
         self.audio_publisher = self.create_publisher(
             Int16MultiArray,
-            "audio",
+            "audio/microphone",
             qos_profile_sensor_data
         )
         self.record_timer = self.create_timer(

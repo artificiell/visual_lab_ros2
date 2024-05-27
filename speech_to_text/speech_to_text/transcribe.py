@@ -2,7 +2,7 @@
 
 # MIT License
 
-# Copyright (c) 2023  Miguel Ángel González Santamarta
+# Copyright (c) 2024 Andreas Persson
 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ import json
 # Speech transcribe node
 class SpeechTranscribe(Node):
     def __init__(self) -> None:
-        super().__init__("speech_transcribe__node")
+        super().__init__("speech_transcribe_node")
 
         # Declare parameters
         self.declare_parameters("", [
@@ -48,6 +48,7 @@ class SpeechTranscribe(Node):
             ("lang", "en-us"),
             ("size", "base"),
             ("rate", 16000),
+            ("channels", 2),
         ])
         self.model = self.get_parameter(
             "model").get_parameter_value().string_value
@@ -57,6 +58,8 @@ class SpeechTranscribe(Node):
             "size").get_parameter_value().string_value
         rate = self.get_parameter(
             "rate").get_parameter_value().integer_value
+        self.channels = self.get_parameter(
+            "channels").get_parameter_value().integer_value
 
         # Load text-to-speech model
         self.get_logger().info(f"Loding model '{self.model}.{model_size}'")
@@ -79,7 +82,7 @@ class SpeechTranscribe(Node):
         )
         self.audio_subscriber = self.create_subscription(
             Int16MultiArray,
-            "audio",
+            "audio/microphone",
             self.audio_callback,
             qos_profile_sensor_data
         )
@@ -87,7 +90,7 @@ class SpeechTranscribe(Node):
     # Audio transcribing callback method
     def audio_callback(self, msg) -> None:
         data = np.frombuffer(msg.data, np.int16)
-        data = np.mean(data.reshape(-1, 2), axis=1).astype(np.int16)
+        data = np.mean(data.reshape(-1, self.channels), axis=1).astype(np.int16)
         if self.model == 'whisper':
             self.frames.append(data.copy())
         data = data.tobytes()
