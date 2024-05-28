@@ -79,19 +79,23 @@ class DisplayVisualizer(Node):
         self.declare_parameters("", [
             ("width", 1920),
             ("height", 1200),
+            ("fullscreen", False),
             ("rate", 30),
         ])
         self.width = self.get_parameter(
             "width").get_parameter_value().integer_value
         self.height = self.get_parameter(
             "height").get_parameter_value().integer_value
+        fullscreen = self.get_parameter(
+            "fullscreen").get_parameter_value().bool_value
         frame_rate = self.get_parameter(
             "rate").get_parameter_value().integer_value
 
         # Create named OpenCV window
         self.name = "Visual Lab Display"
         cv2.namedWindow(self.name, cv2.WINDOW_NORMAL)
-        cv2.setWindowProperty(self.name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+        if fullscreen:
+            cv2.setWindowProperty(self.name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
         self.background = np.zeros((self.height, self.width, 3), dtype=np.uint8)
         self.background.fill(255)
         

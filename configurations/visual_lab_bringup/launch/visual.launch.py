@@ -11,6 +11,7 @@ def generate_launch_description():
     # Launch configuration
     display_width = LaunchConfiguration('display_width')
     display_height = LaunchConfiguration('display_height')
+    display_fullscreen = LaunchConfiguration('display_fullscreen')
     zed_camera_model = LaunchConfiguration('microphone_channels')
 
     # Launch arguments
@@ -21,6 +22,10 @@ def generate_launch_description():
     display_height_arg = DeclareLaunchArgument(
         'display_height',
         default_value = '1200'
+    )
+    display_fullscreen_arg = DeclareLaunchArgument(
+        'display_fullscreen',
+        default_value = 'False'
     )
     zed_camera_model_arg = DeclareLaunchArgument(
         'zed_camera_model',
@@ -48,7 +53,8 @@ def generate_launch_description():
         name = 'display_visualizer_node',
         parameters=[{
             'width': LaunchConfiguration('display_width'),
-            'height': LaunchConfiguration('display_height')
+            'height': LaunchConfiguration('display_height'),
+            'fullscreen': LaunchConfiguration('display_fullscreen')
         }]
     )
 
@@ -56,6 +62,7 @@ def generate_launch_description():
     return LaunchDescription([
         display_width_arg,
         display_height_arg,
+        display_fullscreen_arg,
         zed_camera_model_arg,
         camera_node,
         visualizer_node
