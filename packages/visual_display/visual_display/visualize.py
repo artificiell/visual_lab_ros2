@@ -58,7 +58,7 @@ class Image:
     def y(self):
         return self._y
     @y.setter
-    def x(self, value):
+    def y(self, value):
         self._y = value
 
     # Draw method
@@ -155,7 +155,7 @@ class DisplayVisualizer(Node):
     # Timed display callback method
     def timed_callback(self) -> None:
         canvas = self.background.copy()
-        for image in self.images:
+        for _, image in self.images.items():
             image.draw_on(canvas)
         cv2.imshow(self.name, canvas)   
         cv2.waitKey(1)
