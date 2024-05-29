@@ -12,7 +12,9 @@ find_package(rosidl_default_generators REQUIRED)
 
 # Define message and service files
 set(msg_files
-  "msg/Keypoint.msg"
+  "msg/Point.msg"
+  "msg/Body.msg"
+  "msg/BodyTracking.msg"
 )
 set(srv_files
   "srv/SetScreenBackground.srv"

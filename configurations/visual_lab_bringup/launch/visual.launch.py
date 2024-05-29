@@ -12,7 +12,7 @@ def generate_launch_description():
     display_width = LaunchConfiguration('display_width')
     display_height = LaunchConfiguration('display_height')
     display_fullscreen = LaunchConfiguration('display_fullscreen')
-    zed_camera_model = LaunchConfiguration('microphone_channels')
+    zed_camera_model = LaunchConfiguration('zed_camera_model')
 
     # Launch arguments
     display_width_arg = DeclareLaunchArgument(
@@ -32,8 +32,8 @@ def generate_launch_description():
         default_value = 'zed2i'
     )
     
-    # Launch ZED camera
-    camera_node = IncludeLaunchDescription(
+    # ZED camera launch
+    camera_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
                 FindPackageShare('zed_wrapper'),
@@ -44,6 +44,13 @@ def generate_launch_description():
         launch_arguments = {
             'camera_model': LaunchConfiguration('zed_camera_model'),
         }.items()
+    )
+
+    # Tracking node
+    tracking_node = Node(
+        package = 'visual_features',
+        executable = 'tracking',
+        name = 'tracking_node'
     )
     
     # Display visualizer node
@@ -64,6 +71,7 @@ def generate_launch_description():
         display_height_arg,
         display_fullscreen_arg,
         zed_camera_model_arg,
-        camera_node,
+        camera_launch,
+        tracking_node,
         visualizer_node
     ])

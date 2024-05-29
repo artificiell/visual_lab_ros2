@@ -1,0 +1,3 @@
+string label
+visual_lab_interfaces/Point position
+visual_lab_interfaces/Point velocity
