@@ -74,7 +74,7 @@ class AudioVisualizer(Node):
         
         # Setup ROS service clients
         self.bg_cli = self.create_client(SetScreenBackground, 'screen/background')
-        self.img_cli = self.create_client(SetScreenImage, 'screen/image')
+        self.img_cli = self.create_client(SetScreenImage, 'screen/set/image')
         while not (self.bg_cli.wait_for_service(timeout_sec = 1.0) or self.img_cli.wait_for_service(timeout_sec = 1.0)):
             self.get_logger().info('Services not available, waiting...')
 
