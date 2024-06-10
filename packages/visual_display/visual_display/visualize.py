@@ -29,15 +29,14 @@ import cv2
 
 import rclpy
 from rclpy.node import Node
-from visual_lab_interfaces.srv import SetScreenBackground, SetScreenImage
+from visual_lab_interfaces.srv import SetScreenBackground, SetScreenImage, UnsetScreenImage
 from cv_bridge import CvBridge
 
 # Helper class for handle images
 class Image:
     def __init__(self, image, x, y) -> None:
-        self._image = image
-        self._x, self._y = x, y
-        self._height, self._width = self._image.shape[:2]
+        self.image = image
+        self.x, self.y = x, y
 
     @property
     def image(self):
@@ -53,6 +52,8 @@ class Image:
     @x.setter
     def x(self, value):
         self._x = value
+        if self._x < 0:
+            self._x = 0
 
     @property
     def y(self):
@@ -60,6 +61,8 @@ class Image:
     @y.setter
     def y(self, value):
         self._y = value
+        if self._y < 0:
+            self._y = 0
 
     # Draw method
     def draw_on(self, canvas):
@@ -110,7 +113,8 @@ class DisplayVisualizer(Node):
 
         # Setup ROS services
         self.background_srv = self.create_service(SetScreenBackground, 'screen/background', self.background_callback)
-        self.image_srv = self.create_service(SetScreenImage, 'screen/image', self.image_callback)
+        self.set_image_srv = self.create_service(SetScreenImage, 'screen/set/image', self.set_image_callback)
+        self.unset_image_srv = self.create_service(UnsetScreenImage, 'screen/unset/image', self.unset_image_callback)
         self.bridge = CvBridge()
         self.images = {}
         
@@ -128,8 +132,8 @@ class DisplayVisualizer(Node):
         # Send response
         return response
 
-    # Screen image callback method
-    def image_callback(self, request, response):
+    # Set screen image callback method
+    def set_image_callback(self, request, response):
 
         # Handle request
         try:
@@ -146,7 +150,22 @@ class DisplayVisualizer(Node):
                 )
             response.success = True
         except Exception as e:
-            self.get_logger().error(f'Background service error: {e}')
+            self.get_logger().error(f'Set image service error: {e}')
+
+        # Send response
+        return response
+
+    # Unset screen image callback method
+    def unset_image_callback(self, request, response):
+
+        # Handle request
+        try:
+            id = request.id
+            if id in self.images:
+                del self.images[id]
+            response.success = True
+        except Exception as e:
+            self.get_logger().error(f'Unset image service error: {e}')
 
         # Send response
         return response
