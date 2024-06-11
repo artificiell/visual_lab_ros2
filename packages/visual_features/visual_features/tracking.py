@@ -58,7 +58,7 @@ class Tracking(Node):
             trk.position.z = float(object.position[2])
             trk.velocity.x = float(object.velocity[0]) 
             trk.velocity.y = float(object.velocity[1]) 
-            trk.velocity.x = float(object.velocity[2])
+            trk.velocity.z = float(object.velocity[2])
             body_trk_msg.tracks.append(trk)
         self.track_publisher.publish(body_trk_msg)
 

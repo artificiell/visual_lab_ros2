@@ -17,7 +17,7 @@ def generate_launch_description():
     # Launch arguments
     display_width_arg = DeclareLaunchArgument(
         'display_width',
-        default_value = '1920'
+        default_value = '5670'
     )
     display_height_arg = DeclareLaunchArgument(
         'display_height',
@@ -25,7 +25,7 @@ def generate_launch_description():
     )
     display_fullscreen_arg = DeclareLaunchArgument(
         'display_fullscreen',
-        default_value = 'False'
+        default_value = 'True'
     )
     zed_camera_model_arg = DeclareLaunchArgument(
         'zed_camera_model',
