@@ -20,25 +20,33 @@ def generate_launch_description():
         default_value = '5760'
     )
     
-    # Audio recorder node
-    recorder_node = Node(
-        package = 'audio_recorder',
-        executable = 'record',
-        name = 'audio_recorder_node',
-        parameters=[{
-            'channels': LaunchConfiguration('microphone_channels')
-        }]
-    )
-
-    # Visual display node
-    display_node = Node(
-        package = 'visual_display',
-        executable = 'visualize',
-        name = 'visual_display_node',
-        parameters=[{
+    # Include microphone launch
+    microphone_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('visual_lab_bringup'),
+                'launch',
+                'microphone.launch.py'
+            ])
+        ]),
+        launch_arguments = {
+            'microphone_channels': LaunchConfiguration('microphone_channels')
+        }.items()
+    )        
+    
+    # Include screen launch
+    screen_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('visual_lab_bringup'),
+                'launch',
+                'screen.launch.py'
+            ])
+        ]),
+        launch_arguments = {
             'width': LaunchConfiguration('display_width'),
             'fullscreen': True
-        }]
+        }.items()
     )
 
     # Audio visualizer node
@@ -56,7 +64,7 @@ def generate_launch_description():
     return LaunchDescription([
         microphone_channels_arg,
         display_width_arg,
-        recorder_node,
-        display_node,
+        microphone_launch,
+        screen_launch,
         visualizer_node
     ])

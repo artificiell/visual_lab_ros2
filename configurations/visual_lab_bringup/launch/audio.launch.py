@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 from launch_ros.actions import Node
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration
+from launch_ros.substitutions import FindPackageShare
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 def generate_launch_description():
 
@@ -19,31 +21,39 @@ def generate_launch_description():
         'speaker_channels',
         default_value = '2'
     )
-    
-    # Audio recorder node
-    recorder_node = Node(
-        package = 'audio_recorder',
-        executable = 'record',
-        name = 'audio_recorder_node',
-        parameters=[{
-            'channels': LaunchConfiguration('microphone_channels')
-        }]
+
+    # Include microphone launch
+    microphone_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('visual_lab_bringup'),
+                'launch',
+                'microphone.launch.py'
+            ])
+        ]),
+        launch_arguments = {
+            'microphone_channels': LaunchConfiguration('microphone_channels')
+        }.items()
     )
 
-    # Audio player node
-    player_node = Node(
-        package = 'audio_player',
-        executable = 'playback',
-        name = 'audio_playback_node',
-        parameters=[{
-            'channels': LaunchConfiguration('speaker_channels')
-        }]
+    # Include speaker launch
+    speaker_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('visual_lab_bringup'),
+                'launch',
+                'speaker.launch.py'
+            ])
+        ]),
+        launch_arguments = {
+            'speaker_channels': LaunchConfiguration('speaker_channels')
+        }.items()
     )
 
     # Lanch the description
     return LaunchDescription([
         microphone_channels_arg,
         speaker_channels_arg,
-        recorder_node,
-        player_node
+        microphone_launch,
+        speaker_launch
     ])

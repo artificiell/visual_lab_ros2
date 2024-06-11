@@ -9,24 +9,9 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 def generate_launch_description():
 
     # Launch configuration
-    display_width = LaunchConfiguration('display_width')
-    display_height = LaunchConfiguration('display_height')
-    display_fullscreen = LaunchConfiguration('display_fullscreen')
     zed_camera_model = LaunchConfiguration('zed_camera_model')
 
     # Launch arguments
-    display_width_arg = DeclareLaunchArgument(
-        'display_width',
-        default_value = '5700'
-    )
-    display_height_arg = DeclareLaunchArgument(
-        'display_height',
-        default_value = '1200'
-    )
-    display_fullscreen_arg = DeclareLaunchArgument(
-        'display_fullscreen',
-        default_value = 'True'
-    )
     zed_camera_model_arg = DeclareLaunchArgument(
         'zed_camera_model',
         default_value = 'zed2i'
@@ -45,29 +30,17 @@ def generate_launch_description():
             'camera_model': LaunchConfiguration('zed_camera_model')
         }.items()
     )
-    
-    # Include screen launch
-    screen_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource([
-            PathJoinSubstitution([
-                FindPackageShare('visual_lab_bringup'),
-                'launch',
-                'screen.launch.py'
-            ])
-        ]),
-        launch_arguments = {
-            'width': LaunchConfiguration('display_width'),
-            'height': LaunchConfiguration('display_height'),
-            'fullscreen': LaunchConfiguration('display_fullscreen')
-        }.items()
-    )
 
+    # Tracking node
+    tracking_node = Node(
+        package = 'visual_features',
+        executable = 'tracking',
+        name = 'tracking_node'
+    )
+    
     # Lanch the description
     return LaunchDescription([
-        display_width_arg,
-        display_height_arg,
-        display_fullscreen_arg,
         zed_camera_model_arg,
         camera_launch,
-        screen_launch
+        tracking_node
     ])
