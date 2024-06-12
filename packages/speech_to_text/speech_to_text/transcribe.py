@@ -33,7 +33,6 @@ from vosk import Model, KaldiRecognizer
 from whisper import load_model
 import torch
 
-import threading
 import numpy as np
 import json
 
@@ -63,7 +62,14 @@ class SpeechTranscribe(Node):
 
         # Load text-to-speech model
         self.get_logger().info(f"Loding model '{self.model}.{model_size}'")
-        model = Model(lang = lang)
+        if self.model == 'whisper':
+            vosk_model_name = 'vosk-model-small-en-us-0.15'
+        else:
+            if model_size == 'base':
+                vosk_model_name = 'vosk-model-en-us-0.22'
+            else:
+                vosk_model_name = 'vosk-model-small-en-us-0.15'
+        model = Model(model_name = vosk_model_name, lang = lang)
         self.recognizer = KaldiRecognizer(model, rate)
         if self.model == 'whisper':
             self.transcriber = load_model(model_size)
@@ -104,7 +110,6 @@ class SpeechTranscribe(Node):
 
                 # Transcribe the frame buffer
                 result = self.transcriber.transcribe(data, task = "transcribe", fp16 = True)
-                #self.get_logger().info(f"Result: '{result}'")
                 self.frames.clear()
                 
             text_msg = String()
