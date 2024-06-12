@@ -11,6 +11,7 @@ def generate_launch_description():
     # Launch configuration
     microphone_channels = LaunchConfiguration('microphone_channels')
     display_width = LaunchConfiguration('display_width')
+    scale_factor = LaunchConfiguration('scale_factor')
 
     # Launch arguments
     microphone_channels_arg = DeclareLaunchArgument(
@@ -21,14 +22,18 @@ def generate_launch_description():
         'display_width',
         default_value = '5760'
     )
+    scale_factor_arg = DeclareLaunchArgument(
+        'scale_factor',
+        default_value = '1.0'
+    )
     
-    # Include microphone launch
-    microphone_launch = IncludeLaunchDescription(
+    # Include speech-to-text launch
+    speech_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
                 FindPackageShare('visual_lab_bringup'),
                 'launch',
-                'microphone.launch.py'
+                'speech_to_text.launch.py'
             ])
         ]),
         launch_arguments = {
@@ -51,14 +56,14 @@ def generate_launch_description():
         }.items()
     )
 
-    # Audio visualizer node
-    visualizer_node = Node(
-        package = 'audio_to_visual',
-        executable = 'visualizer',
-        name = 'audio_visualizer_node',
+    # Image generation node
+    generator_node = Node(
+        package = 'image_generation',
+        executable = 'generator',
+        name = 'image_generator_node',
         parameters=[{
-            'width': LaunchConfiguration('display_width'),
-            'channels': LaunchConfiguration('microphone_channels')
+            'screen_width': LaunchConfiguration('display_width'),
+            'scale_factor': LaunchConfiguration('scale_factor')
         }]
     )
 
@@ -66,7 +71,8 @@ def generate_launch_description():
     return LaunchDescription([
         microphone_channels_arg,
         display_width_arg,
-        microphone_launch,
+        scale_factor_arg,
+        speech_launch,
         screen_launch,
-        visualizer_node
+        generator_node
     ])
