@@ -36,7 +36,7 @@ def generate_launch_description():
         }.items()
     )
 
-    # Text-to-speech node
+    # Sspeech-to-text node
     transcribe_node = Node(
         package = 'speech_to_text',
         executable = 'transcribe',
