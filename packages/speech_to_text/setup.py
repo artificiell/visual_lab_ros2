@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'transcribe = speech_to_text.transcribe:main'
+            'transcribe = speech_to_text.transcribe:main',
+            'keyword = speech_to_text.keyword:main'
         ],
     },
 )

@@ -161,3 +161,8 @@ cython_debug/
 
 # Emacs
 *~
+
+# ROS
+build/
+install/
+log/

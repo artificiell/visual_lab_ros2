@@ -58,6 +58,14 @@ def generate_launch_description():
             'rate': LaunchConfiguration('speech_rate')
         }]
     )
+    
+    # Keyword extraction node
+    keyword_node = Node(
+        package = 'text_to_speech',
+        executable = 'keyword',
+        name = 'keyword_node', 
+
+    )
 
     # Lanch the description
     return LaunchDescription([
@@ -66,5 +74,6 @@ def generate_launch_description():
         speech_pitch_arg,
         speech_rate_arg,
         speaker_launch,
-        speech_node
+        speech_node,
+        keyword_node
     ])
