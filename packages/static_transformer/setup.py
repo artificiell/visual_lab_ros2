@@ -25,7 +25,6 @@ setup(
     entry_points={
         'console_scripts': [
             'record = static_transformer.record:main',
-            'broadcast = static_transformer.broadcast:main',
             'transform = static_transformer.transform:main'
         ],
     },

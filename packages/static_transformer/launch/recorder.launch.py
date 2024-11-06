@@ -10,15 +10,9 @@ def generate_launch_description():
 
     # Launch configuration
     zed_serial_number = LaunchConfiguration('zed_serial_number')
-    zed_camera_model = LaunchConfiguration('zed_camera_model')
     number_of_samples = LaunchConfiguration('number_of_samples')
     
     # Launch arguments
-    zed_camera_model_arg = DeclareLaunchArgument(
-        'zed_camera_model',
-        default_value = 'zed2i',
-        description = 'ZED camera model (zed2i, zed2, zed, or zedm)'
-    )
     zed_serial_number_arg = DeclareLaunchArgument(
         'zed_serial_number',
         default_value = '37817095',
@@ -32,7 +26,7 @@ def generate_launch_description():
         
     )
 
-    # Include microphone launch
+    # Include camera launch
     camera_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
@@ -42,7 +36,6 @@ def generate_launch_description():
             ])
         ]),
         launch_arguments = {
-            'zed_camera_model': LaunchConfiguration('zed_camera_model'),
             'zed_serial_number': LaunchConfiguration('zed_serial_number'),
         }.items()
     )
@@ -55,8 +48,8 @@ def generate_launch_description():
         parameters=[{
             'marker_size': 0.19,
             'aruco_dictionary_id': 'DICT_ARUCO_ORIGINAL',
-            'image_topic': '/zed/zed_node/rgb/image_rect_color',
-            'camera_info_topic': '/zed/zed_node/rgb/camera_info'
+            'image_topic': '/zed/camera/rgb/image_rect_color',
+            'camera_info_topic': '/zed/camera/rgb/camera_info'
         }]
     )
 
@@ -74,7 +67,6 @@ def generate_launch_description():
 
     # Lanch the description
     return LaunchDescription([
-        zed_camera_model_arg,
         zed_serial_number_arg,
         number_of_samples_arg,
         camera_launch,

@@ -12,7 +12,8 @@ def generate_launch_description():
     display_width = LaunchConfiguration('display_width')
     display_height = LaunchConfiguration('display_height')
     display_fullscreen = LaunchConfiguration('display_fullscreen')
-    zed_camera_model = LaunchConfiguration('zed_camera_model')
+    zed_node_name = LaunchConfiguration('zed_node_name')
+    zed_serial_number = LaunchConfiguration('zed_serial_number')
 
     # Launch arguments
     display_width_arg = DeclareLaunchArgument(
@@ -27,9 +28,17 @@ def generate_launch_description():
         'display_fullscreen',
         default_value = 'True'
     )
-    zed_camera_model_arg = DeclareLaunchArgument(
-        'zed_camera_model',
-        default_value = 'zed2i'
+    zed_node_name_arg = DeclareLaunchArgument(
+        'zed_node_name',
+        default_value = 'camera',
+        description = 'ZED node name (used for the namespace of camera topics)'
+        
+    )
+    zed_serial_number_arg = DeclareLaunchArgument(
+        'zed_serial_number',
+        default_value = '37817095',
+        description = 'ZED camera serial number (38160741, 37817095, 36374190, or 36240144)'
+        
     )
     
     # Include camera launch
@@ -42,7 +51,8 @@ def generate_launch_description():
             ])
         ]),
         launch_arguments = {
-            'camera_model': LaunchConfiguration('zed_camera_model')
+            'zed_node_name': LaunchConfiguration('zed_camera_model'),
+            'zed_serial_number': LaunchConfiguration('zed_serial_number')
         }.items()
     )
     
@@ -67,7 +77,8 @@ def generate_launch_description():
         display_width_arg,
         display_height_arg,
         display_fullscreen_arg,
-        zed_camera_model_arg,
+        zed_node_name_arg,
+        zed_serial_number_arg,        
         camera_launch,
         screen_launch
     ])

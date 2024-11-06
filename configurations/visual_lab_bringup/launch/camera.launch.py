@@ -11,6 +11,7 @@ def generate_launch_description():
     # Launch configuration
     zed_camera_name = LaunchConfiguration('zed_camera_name')
     zed_camera_model = LaunchConfiguration('zed_camera_model')
+    zed_node_name = LaunchConfiguration('zed_node_name')
     zed_serial_number = LaunchConfiguration('zed_serial_number')
     zed_publish_tf = LaunchConfiguration('zed_publish_tf')
     zed_publish_urdf = LaunchConfiguration('zed_publish_urdf')
@@ -19,13 +20,19 @@ def generate_launch_description():
     zed_camera_name_arg = DeclareLaunchArgument(
         'zed_camera_name',
         default_value = 'zed',
-        description = 'ZED camera name (used for the namespace of camera topics)'
+        description = 'ZED camera name (used as prefix for the namespace of camera topics)'
         
     )
     zed_camera_model_arg = DeclareLaunchArgument(
         'zed_camera_model',
         default_value = 'zed2i',
         description = 'ZED camera model (zed2i, zed2, zed, or zedm)'
+        
+    )
+    zed_node_name_arg = DeclareLaunchArgument(
+        'zed_node_name',
+        default_value = 'camera',
+        description = 'ZED node name (used for the namespace of camera topics)'
         
     )
     zed_serial_number_arg = DeclareLaunchArgument(
@@ -55,6 +62,7 @@ def generate_launch_description():
         launch_arguments = {
             'camera_name': LaunchConfiguration('zed_camera_name'),
             'camera_model': LaunchConfiguration('zed_camera_model'),
+            'node_name': LaunchConfiguration('zed_node_name'),
             'serial_number': LaunchConfiguration('zed_serial_number'),
             'publish_tf': LaunchConfiguration('zed_publish_tf'),
             'publish_urdf': LaunchConfiguration('zed_publish_urdf')
@@ -65,6 +73,7 @@ def generate_launch_description():
     return LaunchDescription([
         zed_camera_name_arg,
         zed_camera_model_arg,
+        zed_node_name_arg,
         zed_serial_number_arg,
         zed_publish_tf_arg,
         zed_publish_urdf_arg,

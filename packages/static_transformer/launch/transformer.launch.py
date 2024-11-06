@@ -9,23 +9,23 @@ from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 def generate_launch_description():
 
     # Launch configuration
-    zed_node_name = LaunchConfiguration('zed_node_name')
     zed_serial_number = LaunchConfiguration('zed_serial_number')
-
-    # Launch arguments
-    zed_node_name_arg = DeclareLaunchArgument(
-        'zed_node_name',
-        default_value = 'camera',
-        description = 'ZED node name (used for the namespace of camera topics)'
+    zed_node_name = LaunchConfiguration('zed_node_name')
         
-    )
+    # Launch arguments
     zed_serial_number_arg = DeclareLaunchArgument(
         'zed_serial_number',
         default_value = '37817095',
         description = 'ZED camera serial number (38160741, 37817095, 36374190, or 36240144)'
         
     )
-    
+    zed_node_name_arg = DeclareLaunchArgument(
+        'zed_node_name',
+        default_value = 'camera',
+        description = 'ZED node name (used for the namespace of camera topics)'
+
+    )
+
     # Include camera launch
     camera_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -36,22 +36,27 @@ def generate_launch_description():
             ])
         ]),
         launch_arguments = {
-            'zed_node_name': LaunchConfiguration('zed_camera_model'),
-            'zed_serial_number': LaunchConfiguration('zed_serial_number')
+            'zed_serial_number': LaunchConfiguration('zed_serial_number'),
+            'zed_node_name': LaunchConfiguration('zed_node_name')
         }.items()
     )
 
-    # Tracking node
-    tracking_node = Node(
-        package = 'visual_features',
-        executable = 'tracking',
-        name = 'tracking_node'
+    # Skeleton transformer node
+    skeleton_transformer_node = Node(
+        package = 'static_transformer',
+        executable = 'transform',
+        name = 'skeleton_transformer_node',
+        parameters=[{
+            'camera_serial_number': LaunchConfiguration('zed_serial_number'),
+            'camera_node_name': LaunchConfiguration('zed_node_name')
+        }]
+        
     )
-    
+
     # Lanch the description
     return LaunchDescription([
+        zed_serial_number_arg,
         zed_node_name_arg,
-        zed_serial_number_arg,        
         camera_launch,
-        tracking_node
+        skeleton_transformer_node
     ])
