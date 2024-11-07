@@ -101,6 +101,12 @@ class TransformRecorder(Node):
         self.sample_count += 1
         self.get_logger().info(f"Sample {self.sample_count} collected.")
 
+
+        # Log position
+        if self.sample_count % 10 == 0:
+            self.get_logger().info(f'Position: {pose.position}')
+            self.get_logger().info(f'Orientation: {pose.orientation}')            
+        
         # When we have enough samples, compute the average
         if self.sample_count >= self.num_samples:
             avg_position, avg_orientation = self.compute_average()
@@ -117,6 +123,7 @@ class TransformRecorder(Node):
         # Compute average orientation using rotation averaging
         rotations = [R.from_quat(orientation) for orientation in self.orientations]
         avg_rotation = R.from_quat(np.mean([r.as_quat() for r in rotations], axis=0)).as_quat()
+        #avg_rotation = np.mean(self.orientations, axis=0)
 
         return avg_position, avg_rotation
 
@@ -124,7 +131,7 @@ class TransformRecorder(Node):
     # Save to config file
     def save_to_yaml(self, avg_position, avg_orientation):
         data = {}
-        serial_number = self.get_parameter('serial_number').get_parameter_value().string_value
+        serial_number = str(self.get_parameter('serial_number').get_parameter_value().integer_value)
         
         # Try to read exisiting config file
         if os.path.isfile(self.config_file):

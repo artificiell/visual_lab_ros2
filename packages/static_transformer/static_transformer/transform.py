@@ -75,7 +75,7 @@ class SkeletonTransform(Node):
                 data[sn]['orientation']['w']
             ])
             self.get_logger().info(f'Position: {self.position}')
-            self.get_logger().info(f'Orientation: {self.orientation}')            
+            self.get_logger().info(f'Orientation: {self.orientation.as_quat()}')            
         else:
             self.get_logger().warn(f'Could not read position and orientation for camera with serial number: {sn}')
 
@@ -113,8 +113,7 @@ class SkeletonTransform(Node):
                 original_kp = np.array([keypoint.kp[0], keypoint.kp[1], keypoint.kp[2]])
                 
                 # Apply rotation and translation
-                rotated_kp = self.orientation.apply(original_kp)
-                transformed_kp = rotated_kp + self.position
+                transformed_kp = self.orientation.inv().apply(original_kp - self.position)
 
                 # Create a new Keypoint3D with the transformed coordinates
                 transformed_keypoint = type(keypoint)()
