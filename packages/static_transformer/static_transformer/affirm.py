@@ -30,17 +30,18 @@ from scipy.spatial.transform import Rotation as R
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
+from geometry_msgs.msg import Pose
+from geometry_msgs.msg import PoseStamped
+from ros2_aruco_interfaces.msg import ArucoMarkers
 from ament_index_python.packages import get_package_share_directory
-from zed_interfaces.msg import ObjectsStamped
 
-# Body skeleton transform node
-class SkeletonTransform(Node):
+# Transform affirm node for verifying that the trannsformation is correct
+class TransformAffirm(Node):
     def __init__(self) -> None:
-        super().__init__("skeleton_transform_node")
+        super().__init__("transform_affirm_node")
 
         # Declare parameters
-        self.declare_parameter('camera_serial_number', 37817095)
-        self.declare_parameter('camera_node_name', 'camera')
+        self.declare_parameter('serial_number', 37817095)
  
         # Path to data log file
         config_file = os.path.join(
@@ -60,7 +61,7 @@ class SkeletonTransform(Node):
             
         # Try to read position and orientation from config file
         self.position, self.orientation = None, None
-        sn = str(self.get_parameter('camera_serial_number').get_parameter_value().integer_value)
+        sn = str(self.get_parameter('serial_number').get_parameter_value().integer_value)
         self.get_logger().info(f'Camera serial number: {sn}')
         if sn in data:
             self.position = np.array([
@@ -79,66 +80,52 @@ class SkeletonTransform(Node):
         else:
             self.get_logger().warn(f'Could not read position and orientation for camera with serial number: {sn}')
 
-        # Setup ROS publisher abd subscriber
-        name = self.get_parameter('camera_node_name').get_parameter_value().string_value
+        # Setup ROS subscriber
         self.subscription = self.create_subscription(
-            ObjectsStamped,
-            f'/zed/{name}/body_trk/skeletons',
-            self.skeletons_callback,
-            qos_profile_sensor_data
+            ArucoMarkers,
+            'aruco/markers',
+            self.marker_callback,
+            10
         )
         self.publisher = self.create_publisher(
-            ObjectsStamped,
-            f'/zed/{name}/body_trk/transformed',
-            qos_profile_sensor_data
+            ArucoMarkers,
+            'aruco/transformed',
+            10
         )
 
-    # Callback function for reciving and applying a transfrom to human bodey skeleton keypoints
-    def skeletons_callback(self, skeletons_msg):
-        if self.position is None or self.orientation is None:
-            self.get_logger().warn("Transformation parameters not loaded; cannot transform skeletons.")
-            return
+    # Callback function for transfroming the position of ArUco markers
+    def marker_callback(self, msg):
 
-        transformed_msg = ObjectsStamped()
-        transformed_msg.header = skeletons_msg.header
+        # Create a new ArucoMarkers to store the transformed poses
+        markers = ArucoMarkers()
+        markers.header = msg.header
+        markers.marker_ids = []
+        markers.poses = []
 
-        # Apply transformation to each object (skeleton)
-        for obj in skeletons_msg.objects:
-            if not obj.skeleton_available:
-                continue
+        # Transform the poses of the other markers relative to the reference marker
+        for i in range(len(msg.marker_ids)):
+            original_pose = np.array([msg.poses[i].position.x, msg.poses[i].position.y, msg.poses[i].position.z])
+            self.get_logger().info(f'Original ({msg.marker_ids[i]}): x={original_pose[0]}, y={original_pose[1]}, z={original_pose[2]}')
+            transformed_pose = self.orientation.inv().apply(original_pose - self.position)
+            pose = Pose()
+            pose.position.x = transformed_pose[0]
+            pose.position.y = transformed_pose[1]
+            pose.position.z = transformed_pose[2]
+            
+            # Add the marker id and transformed pose to the new message
+            markers.marker_ids.append(msg.marker_ids[i])
+            markers.poses.append(pose)
 
-            # Transform the 3D keypoints of the skeleton
-            transformed_skeleton = []
-            for keypoint in obj.skeleton_3d.keypoints:
-                original_kp = np.array([keypoint.kp[2], keypoint.kp[1], keypoint.kp[0]])
-                #self.get_logger().info(f'Original: : x={original_kp[0]}, y={original_kp[1]}, z={original_kp[2]}')
-
-                # Apply rotation and translation
-                if np.all(original_kp == 0.0):
-                    transformed_kp = original_kp
-                else:
-                    transformed_kp = self.orientation.inv().apply(original_kp - self.position)
-                #self.get_logger().info(f'Transformed: : x={transformed_kp[0]}, y={transformed_kp[1]}, z={transformed_kp[2]}')
-
-                # Create a new Keypoint3D with the transformed coordinates
-                transformed_keypoint = type(keypoint)()
-                transformed_keypoint.kp = [float(transformed_kp[0]), float(transformed_kp[1]), float(transformed_kp[2])]
-                transformed_skeleton.append(transformed_keypoint)
-
-            # Update the skeleton keypoints in the transformed message
-            transformed_obj = obj  # copy existing data
-            transformed_obj.skeleton_3d.keypoints = transformed_skeleton
-            transformed_msg.objects.append(transformed_obj)
-            #self.get_logger().info(f'---------------------')
-
-        # Publish the transformed skeletons
-        self.publisher.publish(transformed_msg)
-
+            self.get_logger().info(f'Transformed ({msg.marker_ids[i]}): x={transformed_pose[0]}, y={transformed_pose[1]}, z={transformed_pose[2]}')
+            
+        # Publish the transformed poses
+        self.publisher.publish(markers)
+        self.get_logger().info(f'---------------------')
         
 # Main function
 def main(args = None):
     rclpy.init(args = args)
-    node = SkeletonTransform()
+    node = TransformAffirm()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

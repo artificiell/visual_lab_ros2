@@ -24,6 +24,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'affirm = static_transformer.affirm:main',
             'record = static_transformer.record:main',
             'transform = static_transformer.transform:main'
         ],

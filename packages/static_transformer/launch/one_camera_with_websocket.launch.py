@@ -22,7 +22,7 @@ def generate_launch_description():
     )
     zed_node_name_arg = DeclareLaunchArgument(
         'zed_node_name',
-        default_value = 'camera',
+        default_value = 'stair',
         description = 'ZED node name (used for the namespace of camera topics)'
 
     )

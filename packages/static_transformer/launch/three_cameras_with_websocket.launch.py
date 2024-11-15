@@ -19,7 +19,7 @@ def generate_launch_description():
 
     # Transformation launches (including cameras)
     description = []
-    for serial_number in ['37817095', '36374190']:
+    for serial_number in ['36240144', '36374190', '37817095']:
         transformer_launch = IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 PathJoinSubstitution([

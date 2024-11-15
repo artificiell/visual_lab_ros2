@@ -10,19 +10,12 @@ def generate_launch_description():
 
     # Launch configuration
     zed_serial_number = LaunchConfiguration('zed_serial_number')
-    number_of_samples = LaunchConfiguration('number_of_samples')
     
     # Launch arguments
     zed_serial_number_arg = DeclareLaunchArgument(
         'zed_serial_number',
         default_value = '37817095',
         description = 'ZED camera serial number (38160741, 37817095, 36374190, or 36240144)'
-        
-    )
-    number_of_samples_arg = DeclareLaunchArgument(
-        'number_of_samples',
-        default_value = '100',
-        description = 'Number of ArUco position and orientation samples'
         
     )
 
@@ -53,14 +46,13 @@ def generate_launch_description():
         }]
     )
 
-    # Transformation recorder node
-    transform_recorder_node = Node(
+    # Transformation affirm node
+    transform_affirm_node = Node(
         package = 'static_transformer',
-        executable = 'record',
-        name = 'transform_recorder_node',
+        executable = 'affirm',
+        name = 'transform_affirm_node',
         parameters=[{
             'serial_number': LaunchConfiguration('zed_serial_number'),
-            'num_samples': LaunchConfiguration('number_of_samples')
         }]
         
     )
@@ -68,8 +60,7 @@ def generate_launch_description():
     # Lanch the description
     return LaunchDescription([
         zed_serial_number_arg,
-        number_of_samples_arg,
         camera_launch,
         aruco_detection_node,
-        transform_recorder_node
+        transform_affirm_node
     ])
