@@ -1,0 +1,7 @@
+string prompt
+float32 temperature 0.0 #  ...temperature > 0. =  do sampling
+float32 top_p 0.0     
+---
+string text
+bool success
+string error ""
