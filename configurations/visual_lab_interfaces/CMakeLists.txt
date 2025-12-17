@@ -15,12 +15,14 @@ set(msg_files
   "msg/Point.msg"
   "msg/Body.msg"
   "msg/BodyTracking.msg"
+  "msg/SentenceEmbedding.msg"
 )
 set(srv_files
   "srv/SetScreenBackground.srv"
   "srv/SetScreenImage.srv"
   "srv/UnsetScreenImage.srv"
   "srv/InstructionPrompt.srv"
+  "srv/SentenceEmbeddings.srv"
 )
 
 # Generate interfaces

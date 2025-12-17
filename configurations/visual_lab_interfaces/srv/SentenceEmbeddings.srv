@@ -1,0 +1,5 @@
+string[] sentences
+---
+SentenceEmbedding[] embeddings
+bool success true
+string error ""
