@@ -11,7 +11,8 @@ def generate_launch_description():
     # Launch configuration
     microphone_channels = LaunchConfiguration('microphone_channels')
     transcribe_model = LaunchConfiguration('transcribe_model')
-
+    language = LaunchConfiguration('transcribe_model')
+    
     # Launch arguments
     microphone_channels_arg = DeclareLaunchArgument(
         'microphone_channels',
@@ -21,7 +22,12 @@ def generate_launch_description():
         'transcribe_model',
         default_value = 'whisper'
     )
+    language_arg = DeclareLaunchArgument(
+        'language',
+        default_value = 'en'
+    )
 
+    
     # Include microphone launch 
     microphone_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
@@ -36,14 +42,15 @@ def generate_launch_description():
         }.items()
     )
 
-    # Sspeech-to-text node
+    # Speech-to-text node
     transcribe_node = Node(
         package = 'speech_to_text',
         executable = 'transcribe',
         name = 'speech_transcribe_node',
         parameters=[{
             'model': LaunchConfiguration('transcribe_model'),
-            'channels': LaunchConfiguration('microphone_channels')
+            'channels': LaunchConfiguration('microphone_channels'),
+            'lang': LaunchConfiguration('language')
         }]
     )
 
@@ -51,6 +58,7 @@ def generate_launch_description():
     return LaunchDescription([
         microphone_channels_arg,
         transcribe_model_arg,
+        language_arg,
         microphone_launch,
         transcribe_node
     ])

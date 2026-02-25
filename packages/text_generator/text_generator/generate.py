@@ -36,10 +36,10 @@ class TextGenerator(Node):
         super().__init__("text_generator_node")
 
         # Declare parameters
-        self.declare_parameter("model", "3B")
-        self.declare_parameter("tokens", 8192)
-        generator = self.get_parameter("model").get_parameter_value().string_value
-        self.tokens = self.get_parameter("tokens").get_parameter_value().integer_value
+        self.declare_parameter("model_size", "3B")
+        self.declare_parameter("max_tokens", 8192)
+        generator = self.get_parameter("model_size").get_parameter_value().string_value
+        self.tokens = self.get_parameter("max_tokens").get_parameter_value().integer_value
 
         # Select model                                                     
         if generator == '8B':
@@ -79,17 +79,24 @@ class TextGenerator(Node):
             # Determine if sampling should be used
             do_sample = (request.temperature > 0.0) or (request.top_p > 0.0)
             temperature = request.temperature if request.temperature > 0.0 else None
-            top_p = request.top_p if request.top_p > 0.0 else None            
+            top_p = request.top_p if request.top_p > 0.0 else None
+
+            # Assemble the prompt
+            prompt = [
+                {"role": "system", "content": request.system},
+                {"role": "user", "content": request.user},
+            ]
 
             # Generate text and process the response
             outputs = self.generation_model(
-                request.prompt,
+                prompt,
                 max_new_tokens = self.tokens,
                 do_sample = do_sample,
                 temperature = temperature,
                 top_p = top_p
             )
-            response.text = outputs[0]["generated_text"]
+            raw = outputs[0]["generated_text"][-1]
+            response.text = raw["content"] 
             response.success = True
 
         except Exception as e:

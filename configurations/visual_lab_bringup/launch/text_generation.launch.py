@@ -28,8 +28,8 @@ def generate_launch_description():
         executable = 'generate',
         name = 'text_generator_node',
         parameters=[{
-            'model': LaunchConfiguration('generation_model_size'),
-            'tokens': LaunchConfiguration('max_generation_tokens')
+            'model_size': LaunchConfiguration('generation_model_size'),
+            'max_tokens': LaunchConfiguration('max_generation_tokens')
         }]
     )
 
