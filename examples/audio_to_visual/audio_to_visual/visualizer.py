@@ -119,6 +119,7 @@ class AudioVisualizer(Node):
         request.id = 'waves'
         request.x = 0
         request.y = int(self.height * 0.75)
+        request.z_index = 0
         request.image = self.bridge.cv2_to_imgmsg(image)
         self.img_cli.call_async(request)
         

@@ -33,9 +33,10 @@ from cv_bridge import CvBridge
 
 # Helper class for handle images
 class Image:
-    def __init__(self, image, x, y) -> None:
+    def __init__(self, image, x, y, z_index) -> None:
         self.image = image
         self.x, self.y = x, y
+        self.z_index = z_index
 
     @property
     def image(self):
@@ -63,6 +64,13 @@ class Image:
         if self._y < 0:
             self._y = 0
 
+    @property
+    def z_index(self):
+        return self._z_index
+    @z_index.setter
+    def z_index(self, value):
+        self._z_index = value
+            
     # Draw method
     def draw_on(self, canvas):
         height, width = canvas.shape[:2]
@@ -71,6 +79,7 @@ class Image:
         if self._y + self._height >= height:
             self._height = height - self._y
         canvas[self._y:self._y + self._height, self._x:self._x + self._width] = self._image[0:self._height, 0:self._width]            
+
         
 # Display visualizer node 
 class DisplayVisualizer(Node):
@@ -116,6 +125,7 @@ class DisplayVisualizer(Node):
         self.unset_image_srv = self.create_service(UnsetScreenImage, 'screen/unset/image', self.unset_image_callback)
         self.bridge = CvBridge()
         self.images = {}
+        self.draw_order = []
         
     # Screen background callback method
     def background_callback(self, request, response):
@@ -140,13 +150,22 @@ class DisplayVisualizer(Node):
             if id in self.images:
                 self.images[id].image = self.bridge.imgmsg_to_cv2(request.image, desired_encoding = 'passthrough')
                 self.images[id].x = request.x 
-                self.images[id].y = request.y 
+                self.images[id].y = request.y
+                self.images[id].z_index = request.z_index
             else:
                 self.images[id] = Image(
                     self.bridge.imgmsg_to_cv2(request.image, desired_encoding = 'passthrough'),
                     request.x,
-                    request.y
+                    request.y,
+                    request.z_index
                 )
+
+            # Maintain draw order
+            self.draw_order = sorted(
+                self.images.keys(),
+                key=lambda id: self.images[id].z_index
+            )
+
             response.success = True
         except Exception as e:
             self.get_logger().error(f'Set image service error: {e}')
@@ -168,12 +187,12 @@ class DisplayVisualizer(Node):
 
         # Send response
         return response
-
     
     # Timed display callback method
     def timed_callback(self) -> None:
         canvas = self.background.copy()
-        for _, image in self.images.items():
+        for id in self.draw_order:
+            image = self.images[id]
             image.draw_on(canvas)
         cv2.imshow(self.name, canvas)   
         cv2.waitKey(1)
@@ -182,6 +201,7 @@ class DisplayVisualizer(Node):
     def cleanup(self) -> None:
         cv2.destroyWindow(self.name)
 
+        
 # Main function
 def main(args = None):
     rclpy.init(args = args)
